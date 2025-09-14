@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modern Elegant Video Player</title>
+  <style>
+    /* ==== sama dengan kode kamu sebelumnya ==== */
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background: radial-gradient(circle at top, #1e293b, #0f172a);
+      font-family:'Inter',system-ui,sans-serif; color:var(--text); padding:20px; }
+    .player-wrap { width:100%; max-width:880px; background:var(--panel); border-radius:var(--radius);
+      overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.7); display:flex; flex-direction:column;
+      border:1px solid rgba(255,255,255,0.08); animation:fadeIn 0.6s ease; }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+    .video-box{background:#000; position:relative;}
+    video{width:100%; display:block; max-height:65vh;}
+    .controls{padding:16px; display:flex; flex-direction:column; gap:14px; background:rgba(0,0,0,0.25);
+      backdrop-filter:blur(10px);}
+    .row{display:flex; align-items:center; gap:12px;}
+    .btn{background:none; border:none; color:var(--text); font-size:20px; cursor:pointer; padding:6px 10px;
+      border-radius:10px; transition:all 0.25s;}
+    .btn:hover{background:rgba(255,255,255,0.1); color:var(--accent-hover); transform:scale(1.08);}
+    .btn.primary{color:var(--accent);}
+    .progress{-webkit-appearance:none; appearance:none; width:100%; height:10px; border-radius:10px;
+      background:rgba(255,255,255,0.12); cursor:pointer;}
+    .progress::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:16px; height:16px;
+      border-radius:50%; background:var(--accent); border:2px solid #fff; box-shadow:0 0 8px rgba(59,130,246,0.7);}
+    .time{font-size:14px; color:var(--muted); min-width:70px; text-align:right; letter-spacing:0.5px;}
+    .spacer{flex:1;}
+    input[type=range]{-webkit-appearance:none; background:transparent;}
+    .vol{width:120px;}
+    .small{font-size:14px; color:var(--muted);}
+    .controls-bottom{display:flex; flex-wrap:wrap; align-items:center; gap:12px;}
+    .file-tools{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+    select.small, input[type=file], .url-input{
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+      border-radius:8px; padding:6px 10px; color:var(--text); cursor:pointer;
+    }
+    @media (max-width:600px){.vol{width:90px;}.time{font-size:12px;}}
+  </style>
+</head>
+<body>
+  <div class="player-wrap">
+    <div class="video-box">
+      <video id="video" preload="metadata" controlsList="nodownload">
+        <source src="videos/video1.mp4" type="video/mp4">
+        Maaf, browser Anda tidak mendukung pemutar video.
+      </video>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <button class="btn" id="playPause">▶️</button>
+        <button class="btn" id="stop">■</button>
+        <div class="spacer"></div>
+        <div class="time" id="time">00:00 / 00:00</div>
+      </div>
+
+      <input type="range" id="progress" class="progress" min="0" value="0" step="0.1">
+
+      <div class="controls-bottom">
+        <button class="btn" id="mute">🔊</button>
+        <input type="range" id="volume" class="vol" min="0" max="1" step="0.01" value="1">
+
+        <label class="small">Speed</label>
+        <select id="speed" class="small">
+          <option value="0.5">0.5×</option>
+          <option value="0.75">0.75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1.25×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+
+        <button class="btn" id="fullscreen">⤢</button>
+
+        <div class="spacer"></div>
+
+        <!-- Dropdown pilih video -->
+        <label class="small">Pilih Video</label>
+        <select id="videoSelect" class="small">
+          <option value="videos/video1.mp4">Video 1</option>
+          <option value="videos/video2.mp4">Video 2</option>
+          <option value="videos/video3.mp4">Video 3</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById('video');
+    const playPause = document.getElementById('playPause');
+    const stopBtn = document.getElementById('stop');
+    const progress = document.getElementById('progress');
+    const timeLabel = document.getElementById('time');
+    const volume = document.getElementById('volume');
+    const muteBtn = document.getElementById('mute');
+    const speed = document.getElementById('speed');
+    const fullscreen = document.getElementById('fullscreen');
+    const videoSelect = document.getElementById('videoSelect');
+
+    function fmt(t){
+      if (!isFinite(t)) return '00:00';
+      const sec = Math.floor(t%60).toString().padStart(2,'0');
+      const min = Math.floor((t/60)%60).toString().padStart(2,'0');
+      const hr = Math.floor(t/3600);
+      return (hr>0 ? hr+':' : '') + (hr>0 ? String(min).padStart(2,'0') : min) + ':' + sec;
+    }
+
+    function togglePlay(){
+      if(video.paused || video.ended){ video.play(); }
+      else { video.pause(); }
+    }
+
+    playPause.addEventListener('click', togglePlay);
+    video.addEventListener('play', ()=>{ playPause.textContent = '⏸'; playPause.classList.add('primary'); });
+    video.addEventListener('pause', ()=>{ playPause.textContent = '▶️'; playPause.classList.remove('primary'); });
+
+    stopBtn.addEventListener('click', ()=>{ video.pause(); video.currentTime = 0; });
+
+    video.addEventListener('loadedmetadata', ()=>{
+      progress.max = video.duration;
+      timeLabel.textContent = `${fmt(0)} / ${fmt(video.duration)}`;
+    });
+    video.addEventListener('timeupdate', ()=>{
+      progress.value = video.currentTime;
+      timeLabel.textContent = `${fmt(video.currentTime)} / ${fmt(video.duration)}`;
+    });
+
+    progress.addEventListener('input', ()=>{ video.currentTime = progress.value; });
+
+    volume.addEventListener('input', ()=>{ video.volume = volume.value; });
+    muteBtn.addEventListener('click', ()=>{
+      video.muted = !video.muted;
+      muteBtn.textContent = video.muted ? '🔇' : '🔊';
+    });
+
+    speed.addEventListener('change', ()=>{ video.playbackRate = Number(speed.value); });
+
+    fullscreen.addEventListener('click', ()=>{
+      if(document.fullscreenElement) document.exitFullscreen();
+      else video.requestFullscreen();
+    });
+
+    // ganti video via dropdown
+    videoSelect.addEventListener('change', ()=>{
+      video.src = videoSelect.value;
+      video.play();
+    });
+  </script>
+</body>
+    </html>
