@@ -2,9 +2,9 @@
 export default function handler(req, res) {
   // Simulasi data dari database
   const videos = [
-    { title: "Video 1", url: "https://cdn.example.com/video1.mp4" },
-    { title: "Video 2", url: "https://cdn.example.com/video2.mp4" },
-    { title: "Video 3", url: "https://cdn.example.com/video3.mp4" }
+    { title: "Video 1", url: "https://videy.co/v/?id=699gmyTh1" },
+    { title: "Video 2", url: "https://videy.co/v/?id=HG4KC8CF1" },
+    { title: "Video 3", url: "https://videy.co/v/?id=DEDydhXC1" }
   ];
 
   res.status(200).json(videos);
